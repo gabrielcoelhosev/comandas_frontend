@@ -1,33 +1,72 @@
-import { createContext, useState, useContext } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import authService from "../services/authService";
+
 const AuthContext = createContext();
-export const AuthProvider = ({
-  children
-}) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return sessionStorage.getItem("loginRealizado") === "true";
-  });
+
+export const AuthProvider = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const login = (cpf, senha) => {
-    if (cpf === "Gabriel" && senha === "bolinhas") {
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (authService.isAuthenticated()) {
+        setIsAuthenticated(true);
+
+        const userData = await authService.getUserData();
+
+        if (userData) {
+          setUser(userData);
+        }
+      }
+
+      setLoading(false);
+    };
+
+    checkAuth();
+  }, []);
+
+  const login = async (cpf, senha) => {
+    const result = await authService.login(cpf, senha);
+
+    if (result.success) {
       setIsAuthenticated(true);
-      sessionStorage.setItem("loginRealizado", "true");
+
+      const userData = await authService.getUserData();
+
+      if (userData) {
+        setUser(userData);
+      }
+
       navigate("/home");
-    } else {
-      alert("Usuário ou senha inválidos!");
     }
+
+    return result;
   };
+
   const logout = () => {
+    authService.logout();
     setIsAuthenticated(false);
-    sessionStorage.removeItem("loginRealizado");
+    setUser(null);
     navigate("/login");
   };
-  return <AuthContext.Provider value={{
+
+  const value = {
     isAuthenticated,
+    user,
+    loading,
     login,
-    logout
-  }}>
-            {children}
-        </AuthContext.Provider>;
+    logout,
+    isTokenExpiringSoon: authService.isTokenExpiringSoon,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
+
 export const useAuth = () => useContext(AuthContext);
