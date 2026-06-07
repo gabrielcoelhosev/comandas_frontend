@@ -1,3 +1,6 @@
+//Gabriel Coelho Severino
+
+
 import React, { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { TextField, Button, Box, Typography, MenuItem, FormControl, InputLabel, Select, Toolbar } from '@mui/material';
@@ -162,7 +165,7 @@ const FuncionarioForm = () => {
       }} />} />
 
                 <Controller name="senha" control={control} defaultValue="" rules={{
-        required: "Senha obrigatória",
+        required: id ? false : "Senha obrigatória",
         minLength: {
           value: 6,
           message: "Pelo menos 6 caracteres"
@@ -171,11 +174,13 @@ const FuncionarioForm = () => {
         field
       }) => <TextField {...field} disabled={isReadOnly} label="Senha" type="password" fullWidth margin="normal" error={!!errors.senha} helperText={errors.senha?.message} />} />
 
-                <Controller name="grupo" control={control} defaultValue="" render={({
+                <Controller name="grupo" control={control} defaultValue="" rules={{
+        required: "Grupo é obrigatório"
+      }} render={({
         field
       }) => <FormControl fullWidth margin="normal">
                             <InputLabel id="grupo-label">Grupo</InputLabel>
-                            <Select {...field} disabled={isReadOnly} label="Grupo" labelId="grupo-label">
+                            <Select {...field} disabled={isReadOnly} label="Grupo" labelId="grupo-label" error={!!errors.grupo}>
                                 <MenuItem value="1">Admin</MenuItem>
                                 <MenuItem value="2">Atendimento Balcão</MenuItem>
                                 <MenuItem value="3">Atendimento Caixa</MenuItem>

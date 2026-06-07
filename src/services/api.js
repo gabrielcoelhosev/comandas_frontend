@@ -3,7 +3,7 @@ import { BASE_URL, TIMEOUT, API_ENDPOINTS } from '../config/apiConfig';
 // Extrair apenas endpoints utilizados no service
 const { AUTH } = API_ENDPOINTS;
 // Criar instância do axios com configurações base
-const api = axios.create({
+export const api = axios.create({
     baseURL: BASE_URL,
     timeout: TIMEOUT,
     headers: {

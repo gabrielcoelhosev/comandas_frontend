@@ -3,6 +3,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { Container, ThemeProvider, CssBaseline } from "@mui/material";
 import { theme } from "./theme";
 import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Navbar from "./components/common/Navbar";
 import AppRoutes from "./routes/Router";
 function App() {
@@ -35,6 +36,7 @@ function App() {
             
             <AppRoutes />
           </Container>
+          <ToastContainer />
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>;

@@ -1,29 +1,31 @@
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Card, CardContent, Typography, Box, Divider } from '@mui/material';
 import { FiberNew } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import PageLayout from "../components/common/PageLayout";
 import ActionButtons from "../components/common/ActionButtons";
+import { useEffect, useState } from 'react';
+import { deleteProduto, getProdutos } from '../services/produtoService';
+
 function ProdutoList() {
+  const [produtos, setProdutos] = useState([]);
+
+  async function fetchProdutos() {
+    try {
+      const data = await getProdutos();
+      setProdutos(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+    }
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchProdutos();
+  }, []);
+
   const navigate = useNavigate();
-  const produtos = [{
-    id: 1,
-    nome: 'Hambúrguer Clássico',
-    descricao: 'Pão, carne, alface, tomate, queijo',
-    valor_unitario: 25.90,
-    foto: '/src/assets/hero.png'
-  }, {
-    id: 2,
-    nome: 'Batata Frita',
-    descricao: 'Porção média de batata crocante',
-    valor_unitario: 12.50,
-    foto: '/src/assets/vite.svg'
-  }, {
-    id: 3,
-    nome: 'Refrigerante',
-    descricao: 'Lata 350ml',
-    valor_unitario: 8.00,
-    foto: '/src/assets/react.svg'
-  }];
+
   const actions = <Button variant="contained" color="primary" onClick={() => navigate('/produto')} startIcon={<FiberNew />} sx={{
     fontWeight: 600,
     px: 2,
@@ -35,9 +37,21 @@ function ProdutoList() {
     style: 'currency',
     currency: 'BRL'
   }).format(value);
-  const handleView = produto => console.log("Visualizar produto:", produto);
-  const handleEdit = produto => navigate(`/produto/${produto.id}`);
-  const handleDelete = produto => console.log("Excluir produto:", produto);
+  const handleView = produto => navigate(`/produto/view/${produto.id}`);
+  const handleEdit = produto => navigate(`/produto/edit/${produto.id}`);
+  const handleDelete = async produto => {
+    try {
+      await deleteProduto(produto.id);
+      await fetchProdutos();
+      toast.success('Produto excluído com sucesso!', {
+        position: "top-center"
+      });
+    } catch (error) {
+      toast.error(`Erro ao excluir produto: ${error.apiMessage || error.message}`, {
+        position: "top-center"
+      });
+    }
+  };
   const columns = [{
     field: 'id',
     headerName: 'ID'
