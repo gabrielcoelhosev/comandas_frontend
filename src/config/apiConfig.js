@@ -42,6 +42,10 @@ export const API_ENDPOINTS = {
         REMOVE_ITEM: '/comanda/produto/:id', // DELETE - remover produto
     },
     RECEBIMENTO: {
+        LIST: '/recebimento/', // GET - listar recebimentos
+        GET: '/recebimento/:id', // GET - buscar recebimento
+        UPDATE: '/recebimento/:id', // PUT - editar recebimento
+        DELETE: '/recebimento/:id', // DELETE - excluir recebimento
         DASHBOARD: '/recebimento/dashboard', // GET - dashboard comandas abertas
         DETALHE: '/recebimento/comandas/detalhe/:ids', // GET - detalhar comandas
         RECEBER: '/recebimento/completo', // POST - processar recebimento

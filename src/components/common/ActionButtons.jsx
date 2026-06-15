@@ -1,43 +1,24 @@
-import { Box, IconButton } from '@mui/material';
-import { Edit, Delete, Visibility } from '@mui/icons-material';
-const ActionButtons = ({
-  item,
-  onView,
-  onEdit,
-  onDelete
-}) => <Box sx={{
-  display: 'flex',
-  gap: 1
-}}>
-        <IconButton size="small" color="primary" sx={{
-    width: 40,
-    height: 40,
-    '&:hover': {
-      backgroundColor: 'primary.light',
-      color: 'white'
-    }
-  }} title="Visualizar" onClick={() => onView(item)}>
-           <Visibility fontSize="small" />
-        </IconButton>
-        <IconButton size="small" color="secondary" sx={{
-    width: 40,
-    height: 40,
-    '&:hover': {
-      backgroundColor: 'secondary.light',
-      color: 'white'
-    }
-  }} title="Editar" onClick={() => onEdit(item)}>
-            <Edit fontSize="small" />
-        </IconButton>
-        <IconButton size="small" color="error" sx={{
-    width: 40,
-    height: 40,
-    '&:hover': {
-      backgroundColor: 'error.light',
-      color: 'white'
-    }
-  }} title="Excluir" onClick={() => onDelete(item)}>
-            <Delete fontSize="small" />
-        </IconButton>
-    </Box>;
+import { Delete, Edit, Visibility } from '@mui/icons-material';
+import Button from '../ui/Button';
+
+const ActionButtons = ({ item, onView, onEdit, onDelete }) => (
+  <div className="row-actions">
+    {onView && (
+      <Button size="icon" variant="outline" title="Visualizar" onClick={() => onView(item)}>
+        <Visibility fontSize="small" />
+      </Button>
+    )}
+    {onEdit && (
+      <Button size="icon" variant="secondary" title="Editar" onClick={() => onEdit(item)}>
+        <Edit fontSize="small" />
+      </Button>
+    )}
+    {onDelete && (
+      <Button size="icon" variant="destructive" title="Excluir" onClick={() => onDelete(item)}>
+        <Delete fontSize="small" />
+      </Button>
+    )}
+  </div>
+);
+
 export default ActionButtons;

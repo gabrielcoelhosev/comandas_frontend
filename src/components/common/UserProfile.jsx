@@ -1,76 +1,44 @@
-import {
-  Avatar,
-  Box,
-  Chip,
-  Divider,
-  ListItemIcon,
-  ListItemText,
-  Menu,
-  MenuItem,
-  Typography,
-} from '@mui/material';
-import { AccountCircle, Badge, Logout } from '@mui/icons-material';
+import { Badge, Logout } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { getGrupoInfo } from '../../constants/userGroups';
+import Button from '../ui/Button';
 
-const UserProfile = ({ anchorEl, onClose }) => {
+const UserProfile = ({ open, onClose }) => {
   const { user, logout } = useAuth();
-  const open = Boolean(anchorEl);
   const grupoInfo = getGrupoInfo(user?.grupo);
-  const avatarContent = user?.nome ? user.nome.charAt(0).toUpperCase() : <AccountCircle />;
+  const avatarContent = user?.nome ? user.nome.charAt(0).toUpperCase() : 'U';
 
   const handleLogout = () => {
     onClose();
     logout();
   };
 
+  if (!open) return null;
+
   return (
-    <Menu
-      anchorEl={anchorEl}
-      open={open}
-      onClose={onClose}
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-    >
-      <Box sx={{ px: 2, py: 1.5, minWidth: 240 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Avatar sx={{ bgcolor: '#f59e0b' }}>{avatarContent}</Avatar>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle2" noWrap>
-              {user?.nome || 'Usuário'}
-            </Typography>
-            {user?.cpf && (
-              <Typography variant="body2" color="text.secondary" noWrap>
-                {user.cpf}
-              </Typography>
-            )}
-          </Box>
-        </Box>
+    <div className="profile-menu">
+      <div className="profile-menu__summary">
+        <span className="avatar">{avatarContent}</span>
+        <div>
+          <p className="profile-menu__name">{user?.nome || 'Usuário'}</p>
+          {user?.cpf && <p className="profile-menu__cpf">{user.cpf}</p>}
+        </div>
+      </div>
 
-        <Chip
-          size="small"
-          color={grupoInfo.color}
-          label={grupoInfo.label}
-          sx={{ mt: 1.5 }}
-        />
-      </Box>
-
-      <Divider />
-
-      <MenuItem disabled>
-        <ListItemIcon>
+      <div className="card__content" style={{ padding: '8px 10px' }}>
+        <span className="badge" data-variant={grupoInfo.color === 'success' ? 'success' : 'muted'}>
           <Badge fontSize="small" />
-        </ListItemIcon>
-        <ListItemText primary="Perfil" />
-      </MenuItem>
+          {grupoInfo.label}
+        </span>
+      </div>
 
-      <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
-        <ListItemIcon sx={{ color: 'error.main' }}>
+      <div className="card__footer" style={{ padding: '8px 10px 10px' }}>
+        <Button variant="destructive" size="sm" onClick={handleLogout}>
           <Logout fontSize="small" />
-        </ListItemIcon>
-        <ListItemText primary="Sair" />
-      </MenuItem>
-    </Menu>
+          Sair
+        </Button>
+      </div>
+    </div>
   );
 };
 

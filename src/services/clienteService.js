@@ -1,5 +1,6 @@
 import api from './api';
 import { API_ENDPOINTS } from '../config/apiConfig';
+import { isLocalAdmin, mockApi } from './mockData';
 
 const { CLIENTE } = API_ENDPOINTS;
 
@@ -45,6 +46,8 @@ export const deleteCliente = async id => {
 };
 
 export const getClientes = async () => {
+  if (isLocalAdmin()) return mockApi.getClientes();
+
   const response = await api.get(CLIENTE.LIST);
   return normalizeClientes(extractData(response));
 };

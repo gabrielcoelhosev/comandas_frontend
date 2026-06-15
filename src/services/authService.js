@@ -3,8 +3,57 @@ import api from './api';
 
 const { AUTH } = API_ENDPOINTS;
 
+const LOCAL_ADMIN = {
+    cpf: import.meta.env.VITE_LOCAL_ADMIN_CPF || '00000000000',
+    usuario: import.meta.env.VITE_LOCAL_ADMIN_USUARIO || 'admin',
+    senha: import.meta.env.VITE_LOCAL_ADMIN_SENHA || 'admin123',
+    user: {
+        id_funcionario: 0,
+        nome: 'Admin Local',
+        cpf: import.meta.env.VITE_LOCAL_ADMIN_CPF || '00000000000',
+        grupo: 1,
+    },
+};
+
+const isLocalAdminLogin = (cpf, senha) => {
+    const cleanCpf = cpf.replace(/\D/g, '');
+    const usuario = cpf.trim().toLowerCase();
+
+    return (cleanCpf === LOCAL_ADMIN.cpf || usuario === LOCAL_ADMIN.usuario) && senha === LOCAL_ADMIN.senha;
+};
+
+const persistLocalAdminSession = () => {
+    const now = new Date().getTime();
+    const expiresIn = 8 * 60 * 60;
+    const expiresAt = now + (expiresIn * 1000);
+
+    sessionStorage.setItem('access_token', 'local-admin-token');
+    sessionStorage.setItem('refresh_token', 'local-admin-refresh-token');
+    sessionStorage.setItem('token_type', 'Local');
+    sessionStorage.setItem('expires_in', expiresIn);
+    sessionStorage.setItem('refresh_expires_in', expiresIn);
+    sessionStorage.setItem('expires_at', expiresAt);
+    sessionStorage.setItem('refresh_expires_at', expiresAt);
+    sessionStorage.setItem('loginRealizado', 'true');
+    sessionStorage.setItem('local_admin', 'true');
+    sessionStorage.setItem('local_admin_user', JSON.stringify(LOCAL_ADMIN.user));
+};
+
 export const authService = {
     login: async (cpf, senha) => {
+        if (isLocalAdminLogin(cpf, senha)) {
+            persistLocalAdminSession();
+
+            return {
+                success: true,
+                data: {
+                    access_token: 'local-admin-token',
+                    token_type: 'Local',
+                    user: LOCAL_ADMIN.user,
+                },
+            };
+        }
+
         try {
             const response = await api.post(AUTH.LOGIN, {
                 cpf: cpf.replace(/\D/g, ''),
@@ -40,6 +89,10 @@ export const authService = {
     },
 
     getUserData: async () => {
+        if (sessionStorage.getItem('local_admin') === 'true') {
+            return JSON.parse(sessionStorage.getItem('local_admin_user'));
+        }
+
         try {
             const response = await api.get(AUTH.ME);
             return response.data;

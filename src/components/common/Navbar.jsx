@@ -1,21 +1,5 @@
 import {
-  AppBar,
-  Avatar,
-  Box,
-  Button,
-  Divider,
-  Drawer,
-  IconButton,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Toolbar,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import {
-  AccountCircle,
+  Close,
   Dashboard,
   Group,
   Logout,
@@ -26,7 +10,7 @@ import {
   RestaurantMenu,
 } from '@mui/icons-material';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import UserProfile from './UserProfile';
 
@@ -37,171 +21,83 @@ const menuItems = [
   { label: 'Produtos', icon: <RestaurantMenu />, path: '/produtos' },
   { label: 'Comandas', icon: <Receipt />, path: '/comandas' },
   { label: 'Caixa', icon: <PointOfSale />, path: '/caixa' },
+  { label: 'Recebimentos', icon: <Receipt />, path: '/recebimentos' },
 ];
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, logout, user } = useAuth();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [profileAnchorEl, setProfileAnchorEl] = useState(null);
+  const [profileOpen, setProfileOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const avatarContent = user?.nome ? user.nome.charAt(0).toUpperCase() : 'U';
+
+  const goTo = (path) => {
+    navigate(path);
+    setMobileDrawerOpen(false);
   };
 
-  const handleDrawerToggle = () => {
-    setMobileDrawerOpen((open) => !open);
-  };
-
-  const handleProfileMenuOpen = (event) => {
-    setProfileAnchorEl(event.currentTarget);
-  };
-
-  const handleProfileMenuClose = () => {
-    setProfileAnchorEl(null);
-  };
-
-  const avatarContent = user?.nome ? user.nome.charAt(0).toUpperCase() : <AccountCircle />;
-
-  const drawer = (
-    <Box onClick={handleDrawerToggle} sx={{ textAlign: 'left', width: 250 }}>
-      <Box sx={{ p: 2, borderBottom: '1px solid rgba(255,255,255,0.12)' }}>
-        <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 600 }}>
-          Menu
-        </Typography>
-      </Box>
-
-      <List>
-        {menuItems.map((item) => (
-          <ListItem
-            key={item.path}
-            onClick={() => navigate(item.path)}
-            sx={{ '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.08)' } }}
-          >
-            <ListItemIcon sx={{ color: 'inherit' }}>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.label} />
-          </ListItem>
-        ))}
-      </List>
-
-      <Divider />
-
-      <List>
-        <ListItem
-          onClick={handleLogout}
-          sx={{ '&:hover': { backgroundColor: 'rgba(239, 68, 68, 0.08)' } }}
-        >
-          <ListItemIcon sx={{ color: 'error.main' }}>
-            <Logout />
-          </ListItemIcon>
-          <ListItemText primary="Sair" sx={{ color: 'error.main' }} />
-        </ListItem>
-      </List>
-    </Box>
+  const renderNavLink = (item) => (
+    <button
+      className={`nav-link ${location.pathname === item.path ? 'is-active' : ''}`}
+      key={item.path}
+      onClick={() => goTo(item.path)}
+      type="button"
+    >
+      {item.icon}
+      <span>{item.label}</span>
+    </button>
   );
 
   return (
-    <AppBar position="sticky" elevation={2}>
-      <Toolbar sx={{ minHeight: 64, px: { xs: 1, sm: 2 } }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-          <Typography
-            variant="h5"
-            component="div"
-            sx={{
-              fontWeight: 700,
-              background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              fontSize: { xs: '1.2rem', sm: '1.5rem' },
-            }}
-          >
-            <RestaurantMenu sx={{ color: '#f59e0b', fontSize: { xs: '1.5rem', sm: '2rem' } }} />
-            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-              Comandas do Zé
-            </Box>
-            <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-              Zé
-            </Box>
-          </Typography>
-        </Box>
+    <nav className="site-nav">
+      <div className="site-nav__inner">
+        <button className="brand nav-link" type="button" onClick={() => navigate(isAuthenticated ? '/home' : '/login')}>
+          <span className="brand__mark">
+            <RestaurantMenu />
+          </span>
+          <span className="brand__text">Comandas do Zé</span>
+        </button>
 
         {isAuthenticated && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
-              {menuItems.map((item) => (
-                <Tooltip key={item.path} title={item.label} arrow>
-                  <Button
-                    color="inherit"
-                    onClick={() => navigate(item.path)}
-                    sx={{
-                      minWidth: 'auto',
-                      px: 1.5,
-                      py: 1,
-                      borderRadius: 2,
-                      alignItems: 'center',
-                      gap: 0.5,
-                      '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' },
-                    }}
-                  >
-                    {item.icon}
-                    <Typography variant="body2" sx={{ ml: 0.5 }}>
-                      {item.label}
-                    </Typography>
-                  </Button>
-                </Tooltip>
-              ))}
+          <div className="nav-actions">
+            <div className="desktop-nav">{menuItems.map(renderNavLink)}</div>
 
-              <IconButton color="inherit" onClick={handleProfileMenuOpen}>
-                <Avatar sx={{ width: 32, height: 32, bgcolor: '#f59e0b' }}>{avatarContent}</Avatar>
-              </IconButton>
+            <button className="avatar-button" type="button" onClick={() => setProfileOpen((open) => !open)} title="Perfil">
+              <span className="avatar">{avatarContent}</span>
+            </button>
 
-              <Tooltip title="Sair" arrow>
-                <IconButton
-                  color="inherit"
-                  onClick={handleLogout}
-                  sx={{ '&:hover': { backgroundColor: 'rgba(239, 68, 68, 0.1)' } }}
-                >
-                  <Logout />
-                </IconButton>
-              </Tooltip>
-            </Box>
+            <button className="nav-icon-button desktop-nav" type="button" onClick={logout} title="Sair">
+              <Logout />
+            </button>
 
-            <Box sx={{ display: { xs: 'flex', sm: 'none' }, alignItems: 'center', gap: 1 }}>
-              <IconButton color="inherit" onClick={handleProfileMenuOpen}>
-                <Avatar sx={{ width: 32, height: 32, bgcolor: '#f59e0b' }}>{avatarContent}</Avatar>
-              </IconButton>
-
-              <IconButton
-                color="inherit"
-                onClick={handleDrawerToggle}
-                sx={{ '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.1)' } }}
-              >
-                <MenuIcon />
-              </IconButton>
-            </Box>
-          </Box>
+            <button
+              className="nav-icon-button mobile-menu-trigger"
+              type="button"
+              onClick={() => setMobileDrawerOpen(true)}
+              title="Abrir menu"
+            >
+              <MenuIcon />
+            </button>
+          </div>
         )}
-      </Toolbar>
+      </div>
 
-      <Drawer
-        variant="temporary"
-        open={mobileDrawerOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{ keepMounted: true }}
-        sx={{
-          display: { xs: 'block', sm: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 250 },
-        }}
-      >
-        {drawer}
-      </Drawer>
+      <div className={`mobile-drawer ${mobileDrawerOpen ? 'is-open' : ''}`} onMouseDown={() => setMobileDrawerOpen(false)}>
+        <aside className="mobile-drawer__panel" onMouseDown={(event) => event.stopPropagation()}>
+          <div className="mobile-drawer__header">
+            <strong>Menu</strong>
+            <button className="button" data-size="icon" data-variant="ghost" type="button" onClick={() => setMobileDrawerOpen(false)}>
+              <Close />
+            </button>
+          </div>
+          <div className="mobile-nav">{menuItems.map(renderNavLink)}</div>
+        </aside>
+      </div>
 
-      <UserProfile anchorEl={profileAnchorEl} onClose={handleProfileMenuClose} />
-    </AppBar>
+      <UserProfile open={profileOpen} onClose={() => setProfileOpen(false)} />
+    </nav>
   );
 };
 

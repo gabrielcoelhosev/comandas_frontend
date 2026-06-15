@@ -1,135 +1,151 @@
-import React, { useEffect, useState } from "react";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Toolbar, Typography, IconButton, Button, useMediaQuery } from '@mui/material';
-import { Edit, Delete, Visibility, FiberNew, PictureAsPdf } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import { getClientes, deleteCliente } from '../services/clienteService';
-import { toast } from 'react-toastify';
-import { useTheme } from '@mui/material/styles';
+import { FiberNew, PeopleAlt, PictureAsPdf } from '@mui/icons-material';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import ActionButtons from '../components/common/ActionButtons';
+import ListToolbar from '../components/common/ListToolbar';
+import PageLayout from '../components/common/PageLayout';
+import Button from '../components/ui/Button';
+import DataTable from '../components/ui/DataTable';
+import { deleteCliente, getClientes } from '../services/clienteService';
+
 function ClienteList() {
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const [clientes, setClientes] = useState([]);
-  useEffect(() => {
-    fetchClientes();
-  }, []);
-  const fetchClientes = async () => {
+
+  const fetchClientes = useCallback(async () => {
     try {
       const data = await getClientes();
-      setClientes(data);
+      setClientes(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Erro ao buscar clientes:', error);
+      toast.error('Erro ao buscar clientes.', { position: 'top-center' });
     }
-  };
-  const handleDeleteClick = cliente => {
-    toast(<div>
-                <Typography>Tem certeza que deseja excluir o cliente <strong>{cliente.nome}</strong>?</Typography>
-                <div style={{
-        marginTop: '10px',
-        display: 'flex',
-        justifyContent: 'flex-end'
-      }}>
-                    <Button variant="contained" color="error" size="small" onClick={() => handleDeleteConfirm(cliente.id_cliente)} style={{
-          marginRight: '10px'
-        }}>Excluir</Button>
-                    <Button variant="outlined" size="small" onClick={() => toast.dismiss()}>Cancelar</Button>
-                </div>
-            </div>, {
-      position: "top-center",
-      autoClose: false,
-      closeOnClick: false,
-      draggable: false,
-      closeButton: false
-    });
-  };
-  const handleDeleteConfirm = async id => {
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchClientes();
+  }, [fetchClientes]);
+
+  const handleDeleteConfirm = async (id) => {
     try {
       await deleteCliente(id);
-      fetchClientes();
+      await fetchClientes();
       toast.dismiss();
-      toast.success('Cliente excluído com sucesso!', {
-        position: "top-center"
-      });
+      toast.success('Cliente excluído com sucesso!', { position: 'top-center' });
     } catch (error) {
       console.error('Erro ao deletar cliente:', error);
-      toast.error('Erro ao excluir cliente.', {
-        position: "top-center"
-      });
+      toast.error('Erro ao excluir cliente.', { position: 'top-center' });
     }
   };
+
+  const handleDeleteClick = (cliente) => {
+    toast(
+      <div>
+        <p>
+          Tem certeza que deseja excluir o cliente <strong>{cliente.nome}</strong>?
+        </p>
+        <div className="dialog-actions" style={{ justifyContent: 'flex-end', marginTop: 12 }}>
+          <Button variant="destructive" size="sm" onClick={() => handleDeleteConfirm(cliente.id_cliente)}>
+            Excluir
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => toast.dismiss()}>
+            Cancelar
+          </Button>
+        </div>
+      </div>,
+      {
+        position: 'top-center',
+        autoClose: false,
+        closeOnClick: false,
+        draggable: false,
+        closeButton: false,
+      },
+    );
+  };
+
   const handleGeneratePdf = () => {
     const doc = new jsPDF();
     doc.text('Relatório de Clientes', 14, 15);
     autoTable(doc, {
       startY: 20,
       head: [['ID', 'Nome', 'CPF', 'Telefone']],
-      body: clientes.map(c => [c.id_cliente, c.nome, c.cpf, c.telefone])
+      body: clientes.map((cliente) => [cliente.id_cliente, cliente.nome, cliente.cpf, cliente.telefone]),
     });
     doc.save('relatorio_clientes.pdf');
   };
-  return <TableContainer component={Paper}>
 
-            <Toolbar sx={{
-      backgroundColor: '#ADD8E6',
-      padding: 2,
-      borderRadius: 1,
-      mb: 2,
-      display: 'flex',
-      justifyContent: 'space-between'
-    }}>
-                <Typography variant="h6" color="success" sx={{
-        fontWeight: 'bold',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1
-      }}>
-                    <PictureAsPdf fontSize="medium" /> Clientes
-                </Typography>
-                <Button variant="contained" color="success" onClick={() => navigate('/cliente')} startIcon={<FiberNew />}>Novo</Button>
-                <Button variant="contained" color="success" startIcon={<PictureAsPdf />} onClick={handleGeneratePdf}>Gerar PDF</Button>
-            </Toolbar>
-            
-            <Table>
-                <TableHead>
-                    <TableRow>
-                        <TableCell>ID</TableCell>
-                        <TableCell>Nome</TableCell>
-                        <TableCell>CPF</TableCell>
-                         
-                        {!isSmallScreen && <>
-                                <TableCell>Telefone</TableCell>
-                            </>}
-                        <TableCell>Ações</TableCell>
-                    </TableRow>
-                </TableHead>
+  const columns = [
+    { key: 'id_cliente', header: 'ID' },
+    { key: 'nome', header: 'Nome', render: (cliente) => <strong>{cliente.nome}</strong> },
+    { key: 'cpf', header: 'CPF' },
+    { key: 'telefone', header: 'Telefone' },
+    {
+      key: 'actions',
+      header: 'Ações',
+      render: (cliente) => (
+        <ActionButtons
+          item={cliente}
+          onView={() => navigate(`/cliente/view/${cliente.id_cliente}`)}
+          onEdit={() => navigate(`/cliente/edit/${cliente.id_cliente}`)}
+          onDelete={handleDeleteClick}
+        />
+      ),
+    },
+  ];
 
-                <TableBody>
-                    {clientes.map(cliente => <TableRow key={cliente.id_cliente}>
-                            <TableCell>{cliente.id_cliente}</TableCell>
-                            <TableCell>{cliente.nome}</TableCell>
-                            <TableCell>{cliente.cpf}</TableCell>
-                            
-                            {!isSmallScreen && <>
-                                    <TableCell>{cliente.telefone}</TableCell>
-                                </>}
-                            <TableCell>
-                                
-                                <IconButton onClick={() => navigate(`/cliente/view/${cliente.id_cliente}`)}>
-                                    <Visibility color="primary" />
-                                </IconButton>
-                                
-                                <IconButton onClick={() => navigate(`/cliente/edit/${cliente.id_cliente}`)}>
-                                    <Edit color="secondary" />
-                                </IconButton>
-                                <IconButton onClick={() => handleDeleteClick(cliente)}>
-                                    <Delete color="error" />
-                                </IconButton>
-                            </TableCell>
-                        </TableRow>)}
-                </TableBody>
-            </Table>
-        </TableContainer>;
+  const renderMobileCard = (cliente) => (
+    <>
+      <div className="entity-card__header">
+        <div>
+          <p className="entity-card__title">{cliente.nome}</p>
+          <p className="entity-card__meta">{`ID ${cliente.id_cliente} - CPF ${cliente.cpf}`}</p>
+        </div>
+        <span className="badge" data-variant="muted">Cliente</span>
+      </div>
+      <div className="entity-card__grid">
+        <span>{cliente.telefone || 'Telefone não informado'}</span>
+      </div>
+      <ActionButtons
+        item={cliente}
+        onView={() => navigate(`/cliente/view/${cliente.id_cliente}`)}
+        onEdit={() => navigate(`/cliente/edit/${cliente.id_cliente}`)}
+        onDelete={handleDeleteClick}
+      />
+    </>
+  );
+
+  return (
+    <PageLayout title="Clientes" description="Cadastro e relatório dos clientes">
+      <ListToolbar
+        icon={<PeopleAlt />}
+        title="Clientes"
+        description={`${clientes.length} registro(s) encontrados`}
+        actions={
+          <>
+            <Button variant="secondary" onClick={() => navigate('/cliente')}>
+              <FiberNew />
+              Novo
+            </Button>
+            <Button variant="outline" onClick={handleGeneratePdf}>
+              <PictureAsPdf />
+              Gerar PDF
+            </Button>
+          </>
+        }
+      />
+
+      <DataTable
+        columns={columns}
+        data={clientes}
+        getRowKey={(cliente) => cliente.id_cliente}
+        renderMobileCard={renderMobileCard}
+      />
+    </PageLayout>
+  );
 }
+
 export default ClienteList;

@@ -1,38 +1,29 @@
-import { Typography, Box } from "@mui/material";
-import PageLayout from "../components/common/PageLayout";
+import PageLayout from '../components/common/PageLayout';
+import { Card } from '../components/ui/Card';
+
 const Dashboard = () => {
-  return <PageLayout title="Dashboard" maxWidth="xl">
-            <Box sx={{
-      mb: 4
-    }}>
-                <Typography variant="h4" sx={{
-        fontWeight: 700,
-        mb: 1
-      }}>
-                    Bem-vindo ao Comandas do Zé, feito por Gabriel!
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                    {`Data: ${new Date().toLocaleDateString('pt-BR', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })}`}
-                </Typography>
-            </Box>
+  const today = new Date().toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
-                        <Box sx={{
-      display: "flex",
-      justifyContent: "center",
-      mt: 4
-    }}>
-                <img src="/Minhafoto.jpeg" alt="Foto do Gabriel" style={{
-        width: "220px",
-        borderRadius: "16px",
-        boxShadow: "0 4px 10px rgba(0,0,0,0.2)"
-      }} />
-            </Box>
+  return (
+    <PageLayout title="Dashboard" description="Visão geral do sistema de comandas" maxWidth="xl">
+      <div className="dashboard-grid">
+        <div className="welcome-panel">
+          <span className="badge">Atendimento</span>
+          <h2>Bem-vindo ao Comandas do Zé, feito por Gabriel!</h2>
+          <p>{`Data: ${today}`}</p>
+        </div>
 
-        </PageLayout>;
+        <Card className="profile-photo-card" elevated>
+          <img src="/Minhafoto.jpeg" alt="Foto do Gabriel" />
+        </Card>
+      </div>
+    </PageLayout>
+  );
 };
+
 export default Dashboard;
