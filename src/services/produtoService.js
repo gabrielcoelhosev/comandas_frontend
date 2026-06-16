@@ -1,5 +1,6 @@
 import api from './api';
 import { API_ENDPOINTS } from '../config/apiConfig';
+import { isLocalAdmin, mockApi } from './mockData';
 
 const { PRODUTO } = API_ENDPOINTS;
 
@@ -15,6 +16,8 @@ const sanitizePayload = data => ({
 });
 
 export const getProdutos = async () => {
+    if (isLocalAdmin()) return mockApi.getProdutos();
+
     const response = await api.get(PRODUTO.LIST);
     return extractData(response);
 };

@@ -10,6 +10,13 @@ const initialData = () => ({
     { id: 2, id_cliente: 2, nome: 'Carlos Almeida', cpf: '98765432100', telefone: '11977776666' },
     { id: 3, id_cliente: 3, nome: 'Juliana Lima', cpf: '45678912300', telefone: '11966665555' },
   ],
+  produtos: [
+    { id: 1, nome: 'X-Burger', descricao: 'Hamburguer da casa', foto: null, valor_unitario: 24.9 },
+    { id: 2, nome: 'Refrigerante lata', descricao: '350ml', foto: null, valor_unitario: 6.5 },
+    { id: 3, nome: 'Porcao de fritas', descricao: 'Batata frita media', foto: null, valor_unitario: 18 },
+    { id: 4, nome: 'Suco natural', descricao: 'Laranja 500ml', foto: null, valor_unitario: 9 },
+    { id: 5, nome: 'Pizza brotinho', descricao: 'Mussarela', foto: null, valor_unitario: 32 },
+  ],
   comandas: [
     {
       id: 101,
@@ -123,6 +130,8 @@ const toResumo = comanda => ({
 export const mockApi = {
   getClientes: () => getData().clientes,
 
+  getProdutos: () => getData().produtos,
+
   getDashboard: () => getData().comandas.filter(comanda => comanda.status === 0).map(toResumo),
 
   getComandasDetalhe: ids => {
@@ -130,6 +139,88 @@ export const mockApi = {
     return getData().comandas
       .filter(comanda => selectedIds.includes(comanda.id))
       .map(comanda => ({ ...toResumo(comanda), itens: comanda.itens }));
+  },
+
+  createComanda: payload => {
+    const data = getData();
+    const cliente = data.clientes.find(item => item.id === Number(payload.cliente_id)) || null;
+    const itens = (payload.itens || []).filter(item => item.produto_id).map(item => {
+      const produto = data.produtos.find(produtoItem => produtoItem.id === Number(item.produto_id));
+      const quantidade = Number(item.quantidade || 1);
+      const valorUnitario = Number(produto?.valor_unitario || 0);
+
+      return {
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        produto_id: produto?.id || Number(item.produto_id),
+        produto: produto || null,
+        quantidade,
+        valor_unitario: valorUnitario,
+        valor_total: quantidade * valorUnitario,
+      };
+    });
+
+    const comanda = {
+      id: Date.now(),
+      comanda: String(payload.comanda),
+      data_hora: nowIso(),
+      status: 0,
+      cliente_id: cliente?.id || null,
+      funcionario_id: payload.funcionario_id || 0,
+      funcionario: { id: 0, nome: 'Admin Local', matricula: 'LOCAL', cpf: '00000000000', telefone: '', grupo: 1 },
+      cliente,
+      itens,
+    };
+
+    data.comandas.unshift(comanda);
+    saveData(data);
+    return toResumo(comanda);
+  },
+
+  updateComanda: (id, payload) => {
+    const data = getData();
+    const cliente = data.clientes.find(item => item.id === Number(payload.cliente_id)) || null;
+    const selectedItems = (payload.itens || []).filter(item => item.produto_id);
+    let updatedComanda = null;
+
+    data.comandas = data.comandas.map(comanda => {
+      if (comanda.id !== Number(id)) return comanda;
+
+      const currentItems = selectedItems.map(item => {
+        const produto = data.produtos.find(produtoItem => produtoItem.id === Number(item.produto_id));
+        const quantidade = Number(item.quantidade || 1);
+        const valorUnitario = Number(item.valor_unitario || produto?.valor_unitario || 0);
+
+        return {
+          id: item.id || Date.now() + Math.floor(Math.random() * 1000),
+          produto_id: produto?.id || Number(item.produto_id),
+          produto: produto || null,
+          quantidade,
+          valor_unitario: valorUnitario,
+          valor_total: quantidade * valorUnitario,
+        };
+      });
+
+      updatedComanda = {
+        ...comanda,
+        comanda: String(payload.comanda),
+        cliente_id: cliente?.id || null,
+        cliente,
+        funcionario_id: payload.funcionario_id || comanda.funcionario_id,
+        itens: currentItems,
+      };
+
+      return updatedComanda;
+    });
+
+    saveData(data);
+    return updatedComanda ? toResumo(updatedComanda) : null;
+  },
+
+  deleteComanda: id => {
+    const data = getData();
+    data.comandas = data.comandas.filter(comanda => comanda.id !== Number(id));
+    saveData(data);
+    return true;
   },
 
   receberComandas: payload => {

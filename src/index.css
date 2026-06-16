@@ -743,17 +743,36 @@ img {
   min-height: 126px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px;
   background: #fff;
   color: var(--foreground);
   text-align: left;
   box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
 .command-tile:hover,
 .command-tile.is-selected {
   border-color: var(--secondary);
   background: #fffbeb;
+}
+
+.command-tile__select {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  padding: 14px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.command-tile__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding: 10px 12px 12px;
 }
 
 .command-tile__top {
@@ -891,6 +910,94 @@ img {
   gap: 18px;
 }
 
+.dialog:has(.create-command-form) {
+  width: min(760px, 100%);
+}
+
+.dialog:has(.confirm-dialog) {
+  width: min(520px, 100%);
+}
+
+.confirm-dialog {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.confirm-dialog__icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: var(--radius);
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
+.confirm-dialog__icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.confirm-dialog__body {
+  display: grid;
+  gap: 10px;
+}
+
+.confirm-dialog__title {
+  color: var(--foreground) !important;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.confirm-dialog__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  background: #f8fafc;
+}
+
+.confirm-dialog__summary span {
+  min-width: 0;
+  color: var(--muted-foreground);
+}
+
+.create-command-form,
+.command-items-editor {
+  display: grid;
+  gap: 14px;
+}
+
+.command-items-editor__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.command-items-editor__empty {
+  min-height: 74px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: #f8fafc;
+}
+
+.command-item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 96px 38px;
+  gap: 10px;
+  align-items: start;
+}
+
+.command-item-row__remove {
+  margin-top: 24px;
+}
+
 .login-page {
   min-height: 100vh;
   display: grid;
@@ -1019,6 +1126,15 @@ img {
   }
 
   .cashier-totals label .input {
+    width: 100%;
+  }
+
+  .command-item-row {
+    grid-template-columns: 1fr;
+  }
+
+  .command-item-row__remove {
+    margin-top: 0;
     width: 100%;
   }
 

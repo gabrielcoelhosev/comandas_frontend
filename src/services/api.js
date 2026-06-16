@@ -2,6 +2,31 @@ import axios from 'axios';
 import { BASE_URL, TIMEOUT, API_ENDPOINTS } from '../config/apiConfig';
 // Extrair apenas endpoints utilizados no service
 const { AUTH } = API_ENDPOINTS;
+
+const formatApiMessage = value => {
+    if (!value) return 'Erro desconhecido';
+
+    if (typeof value === 'string') return value;
+
+    if (Array.isArray(value)) {
+        return value.map(formatApiMessage).join('\n');
+    }
+
+    if (typeof value === 'object') {
+        const location = Array.isArray(value.loc) ? value.loc.join(' > ') : '';
+        const message = value.msg || value.message || value.detail;
+
+        if (message) {
+            return location ? `${location}: ${formatApiMessage(message)}` : formatApiMessage(message);
+        }
+
+        return Object.entries(value)
+            .map(([key, item]) => `${key}: ${formatApiMessage(item)}`)
+            .join('\n');
+    }
+
+    return String(value);
+};
 // Criar instância do axios com configurações base
 export const api = axios.create({
     baseURL: BASE_URL,
@@ -74,7 +99,13 @@ api.interceptors.response.use(
                 return Promise.reject(refreshError);
             }
         } else {
-            const errorMessage = error.response?.data?.detail || error.message || 'Erro desconhecido';
+            const errorMessage = formatApiMessage(
+                error.response?.data?.detail
+                || error.response?.data?.message
+                || error.response?.data
+                || error.message
+                || 'Erro desconhecido',
+            );
             error.apiMessage = errorMessage;
         }
 
