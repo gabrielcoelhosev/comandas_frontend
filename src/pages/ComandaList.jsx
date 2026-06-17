@@ -1,4 +1,4 @@
-import { Add, AddShoppingCart, Delete, Edit, PointOfSale, ReceiptLong, Refresh, Search } from '@mui/icons-material';
+import { Add, AddShoppingCart, Delete, Edit, History, PointOfSale, ReceiptLong, Refresh, Search, Visibility } from '@mui/icons-material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -7,7 +7,7 @@ import PageLayout from '../components/common/PageLayout';
 import Button from '../components/ui/Button';
 import Dialog from '../components/ui/Dialog';
 import { useAuth } from '../context/AuthContext';
-import { createComanda, deleteComanda, updateComanda } from '../services/comandaService';
+import { createComanda, deleteComanda, getComandasFechadas, updateComanda } from '../services/comandaService';
 import { getClientes } from '../services/clienteService';
 import { getProdutos } from '../services/produtoService';
 import { getCaixaDashboard, getComandasDetalhe } from '../services/recebimentoService';
@@ -21,12 +21,14 @@ const ComandaList = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [comandas, setComandas] = useState([]);
+  const [comandasFechadas, setComandasFechadas] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [produtos, setProdutos] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [detalhes, setDetalhes] = useState([]);
   const [numeroComanda, setNumeroComanda] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [closedDetail, setClosedDetail] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [editingComandaId, setEditingComandaId] = useState(null);
   const [originalItemIds, setOriginalItemIds] = useState([]);
@@ -49,10 +51,28 @@ const ComandaList = () => {
     }
   }, []);
 
+  const fetchComandasFechadas = useCallback(async () => {
+    try {
+      const data = await getComandasFechadas();
+      setComandasFechadas(Array.isArray(data) ? data : []);
+    } catch (error) {
+      toast.error(`Erro ao buscar comandas fechadas: ${error.apiMessage || error.message}`, {
+        position: 'top-center',
+      });
+    }
+  }, []);
+
+  const refreshComandas = useCallback(async () => {
+    await Promise.all([
+      fetchComandas(),
+      fetchComandasFechadas(),
+    ]);
+  }, [fetchComandas, fetchComandasFechadas]);
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchComandas();
-  }, [fetchComandas]);
+    refreshComandas();
+  }, [refreshComandas]);
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -137,6 +157,24 @@ const ComandaList = () => {
     }
 
     navigate('/caixa', { state: { selectedIds } });
+  };
+
+  const handleViewClosedComanda = async id => {
+    try {
+      const data = await getComandasDetalhe([id]);
+      const comanda = Array.isArray(data) ? data[0] : null;
+
+      if (!comanda) {
+        toast.warn('Comanda fechada nao encontrada.', { position: 'top-center' });
+        return;
+      }
+
+      setClosedDetail(comanda);
+    } catch (error) {
+      toast.error(`Erro ao carregar comanda fechada: ${error.apiMessage || error.message}`, {
+        position: 'top-center',
+      });
+    }
   };
 
   const updateNovaComanda = (field, value) => {
@@ -230,7 +268,7 @@ const ComandaList = () => {
       setSelectedIds(current => current.filter(id => id !== deleteTarget.id));
       toast.success(`Comanda ${deleteTarget.comanda} excluida com sucesso.`, { position: 'top-center' });
       setDeleteTarget(null);
-      await fetchComandas();
+      await refreshComandas();
     } catch (error) {
       toast.error(`Erro ao excluir comanda: ${error.apiMessage || error.message}`, {
         position: 'top-center',
@@ -280,7 +318,7 @@ const ComandaList = () => {
       const savedEditingId = editingComandaId;
       setShowCreateDialog(false);
       resetNovaComanda();
-      await fetchComandas();
+      await refreshComandas();
       if (savedEditingId) {
         setSelectedIds(current => (current.includes(savedEditingId) ? [...current] : current));
       }
@@ -305,7 +343,7 @@ const ComandaList = () => {
         description={`${comandas.length} comanda(s) em aberto`}
         actions={
           <>
-            <Button variant="outline" onClick={fetchComandas}>
+            <Button variant="outline" onClick={refreshComandas}>
               <Refresh />
               Atualizar
             </Button>
@@ -416,6 +454,38 @@ const ComandaList = () => {
           </Button>
         </aside>
       </div>
+
+      <section className="closed-commands-section">
+        <ListToolbar
+          icon={<History />}
+          title="Comandas fechadas"
+          description={`${comandasFechadas.length} comanda(s) fechada(s)`}
+        />
+
+        <div className="command-grid">
+          {comandasFechadas.map(comanda => (
+            <article className="command-tile command-tile--closed" key={comanda.id}>
+              <div className="command-tile__select">
+                <span className="command-tile__top">
+                  <strong>{`Comanda ${comanda.comanda}`}</strong>
+                  <span className="badge" data-variant="muted">Fechada</span>
+                </span>
+                <span>{comanda.cliente?.nome || 'Cliente nao informado'}</span>
+                <span>{`${comanda.itens_count || 0} item(ns)`}</span>
+                <span>{comanda.data_hora ? new Date(comanda.data_hora).toLocaleString('pt-BR') : 'Data nao informada'}</span>
+                <span className="badge" data-variant="success">{formatCurrency(comanda.total)}</span>
+              </div>
+              <div className="command-tile__actions">
+                <Button size="sm" variant="outline" onClick={() => handleViewClosedComanda(comanda.id)}>
+                  <Visibility />
+                  Ver itens
+                </Button>
+              </div>
+            </article>
+          ))}
+          {comandasFechadas.length === 0 && <div className="empty-state">Nenhuma comanda fechada.</div>}
+        </div>
+      </section>
 
       <Dialog
         open={showCreateDialog}
@@ -559,6 +629,42 @@ const ComandaList = () => {
             </div>
           </div>
         </div>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(closedDetail)}
+        title={closedDetail ? `Comanda fechada ${closedDetail.comanda}` : 'Comanda fechada'}
+        onClose={() => setClosedDetail(null)}
+        actions={
+          <Button variant="outline" onClick={() => setClosedDetail(null)}>
+            Fechar
+          </Button>
+        }
+      >
+        {closedDetail && (
+          <div className="selected-order selected-order--dialog">
+            <header>
+              <strong>{closedDetail.cliente?.nome || 'Cliente nao informado'}</strong>
+              <span>{formatCurrency(closedDetail.total)}</span>
+            </header>
+            <div className="order-items">
+              {(closedDetail.itens || []).map(item => (
+                <div className="order-item" key={item.id || `${item.produto_id}-${item.quantidade}`}>
+                  {item.produto?.foto ? (
+                    <img src={item.produto.foto} alt={item.produto.nome} />
+                  ) : (
+                    <span className="order-item__placeholder"><AddShoppingCart /></span>
+                  )}
+                  <div>
+                    <strong>{item.produto?.nome || `Produto ${item.produto_id}`}</strong>
+                    <span>{`${item.quantidade} x ${formatCurrency(item.valor_unitario)}`}</span>
+                  </div>
+                  <b>{formatCurrency(item.valor_total)}</b>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </Dialog>
     </PageLayout>
   );

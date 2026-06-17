@@ -580,6 +580,44 @@ img {
   font-weight: 750;
 }
 
+.product-photo-field {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.product-photo-preview,
+.product-photo-placeholder {
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius);
+}
+
+.product-photo-preview {
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.product-photo-placeholder {
+  display: grid;
+  place-items: center;
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.product-photo-placeholder svg {
+  width: 32px;
+  height: 32px;
+}
+
+.product-photo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
 .input,
 .select,
 .textarea {
@@ -799,6 +837,24 @@ img {
   font-size: 1.25rem;
 }
 
+.closed-commands-section {
+  display: grid;
+  gap: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  background: var(--card);
+}
+
+.command-tile--closed {
+  background: #f8fafc;
+}
+
+.command-tile--closed:hover {
+  border-color: var(--border);
+  background: #f8fafc;
+}
+
 .selected-orders {
   display: grid;
   gap: 12px;
@@ -813,6 +869,13 @@ img {
   border-radius: var(--radius);
   padding: 12px;
   background: #f8fafc;
+}
+
+.selected-order--dialog {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .selected-order header,

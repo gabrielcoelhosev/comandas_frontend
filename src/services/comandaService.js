@@ -14,6 +14,35 @@ const sanitizeItem = (item, data) => ({
   valor_unitario: Number(item.valor_unitario || 0),
 });
 
+const isClosedComanda = comanda => Number(comanda.status) !== 0;
+
+const getComandaTotal = comanda => {
+  if (comanda.total !== undefined && comanda.total !== null) return Number(comanda.total || 0);
+  if (comanda.valor_total !== undefined && comanda.valor_total !== null) return Number(comanda.valor_total || 0);
+
+  return (comanda.itens || []).reduce(
+    (total, item) => total + Number(item.valor_total || item.quantidade * item.valor_unitario || 0),
+    0,
+  );
+};
+
+const normalizeComandaResumo = comanda => ({
+  ...comanda,
+  total: getComandaTotal(comanda),
+  itens_count: comanda.itens_count ?? comanda.itens?.length ?? 0,
+});
+
+export const getComandasFechadas = async () => {
+  if (isLocalAdmin()) return mockApi.getComandasFechadas();
+
+  const response = await api.get(COMANDA.LIST);
+  const comandas = extractData(response);
+
+  return (Array.isArray(comandas) ? comandas : [])
+    .filter(isClosedComanda)
+    .map(normalizeComandaResumo);
+};
+
 export const createComanda = async data => {
   if (isLocalAdmin()) return mockApi.createComanda(data);
 

@@ -134,6 +134,8 @@ export const mockApi = {
 
   getDashboard: () => getData().comandas.filter(comanda => comanda.status === 0).map(toResumo),
 
+  getComandasFechadas: () => getData().comandas.filter(comanda => comanda.status !== 0).map(toResumo),
+
   getComandasDetalhe: ids => {
     const selectedIds = ids.map(Number);
     return getData().comandas
